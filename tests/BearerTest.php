@@ -1,0 +1,253 @@
+<?php
+
+namespace StrategeryTest\Unit\Psr7\OAuth2Middleware;
+
+use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Psr7\Response;
+use League\OAuth2\Client\Provider\AbstractProvider;
+use League\OAuth2\Client\Token\AccessToken;
+use PHPUnit_Framework_MockObject_MockObject as MockObject;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
+use Strategery\Psr7\OAuth2Middleware\Bearer;
+
+/**
+ * Class BearerTest
+ * @author Gabriel Somoza <gabriel@strategery.io>
+ */
+class BearerTest extends TestCase
+{
+    /** @var MockObject|AbstractProvider */
+    private $provider;
+
+    /**
+     * setUp
+     * @return void
+     */
+    public function setUp()
+    {
+        $this->provider = $this->getMock(AbstractProvider::class);
+    }
+
+    /**
+     * testConstructorWithoutAccessToken
+     * @test
+     */
+    public function can_construct_without_access_token()
+    {
+        $instance = new Bearer($this->provider);
+        $token = $this->getPropVal($instance, 'accessToken');
+        $this->assertNull($token);
+    }
+
+    /**
+     * testConstructorWithAccessToken
+     * @test
+     */
+    public function can_construct_with_access_token()
+    {
+        $token = new AccessToken(['access_token' => '123']);
+        $instance = new Bearer($this->provider, $token);
+        $result = $this->getPropVal($instance, 'accessToken');
+        $this->assertSame($token, $result);
+    }
+
+    /**
+     * testRequestNewAccessToken
+     * @test
+     */
+    public function can_request_new_access_token()
+    {
+        $this->provider->expects($this->once())
+            ->method('getAccessToken')
+            ->with('client_credentials')
+            ->willReturn('123');
+
+        $instance = new Bearer($this->provider);
+
+        $this->invoke($instance, 'checkAccessToken');
+
+        $this->assertEquals('123', $this->getPropVal($instance, 'accessToken'));
+    }
+
+    /**
+     * should_skip_requests_with_authentication_header
+     * @return void
+     *
+     * @test
+     */
+    public function should_skip_requests_with_authentication_header()
+    {
+        $request = new Request('GET', 'http://foo.bar/oauth', ['Authentication' => null]);
+        $instance = new Bearer($this->provider);
+
+        $result = $this->invoke($instance, 'authenticate', [$request]);
+        $this->assertSame($request, $result);
+    }
+
+    /**
+     * should_skip_non_GET_requests
+     * @test
+     */
+    public function should_skip_non_GET_requests()
+    {
+        $request = new Request('POST', 'http://foo.bar/oauth');
+        $instance = new Bearer($this->provider);
+
+        $result = $this->invoke($instance, 'authenticate', [$request]);
+        $this->assertSame($request, $result);
+    }
+
+    /**
+     * should_skip_requests_to_authentication_uri
+     * @test
+     */
+    public function should_skip_requests_to_authentication_uri()
+    {
+        $this->provider->expects($this->once())
+            ->method('getBaseAuthorizationUrl')
+            ->willReturn('http://foo.bar/oauth');
+        $instance = new Bearer($this->provider);
+        $request = new Request('GET', 'http://foo.bar/oauth');
+
+        $result = $this->invoke($instance, 'authenticate', [$request]);
+        $this->assertSame($request, $result);
+    }
+
+    /**
+     * should_request_new_access_token_if_no_token
+     * @test
+     */
+    public function should_request_new_access_token_if_no_token()
+    {
+        $instance = new Bearer($this->provider);
+
+        $accessToken = new AccessToken(['access_token' => '123']);
+        $this->provider->expects($this->once())
+            ->method('getAccessToken')
+            ->willReturn($accessToken);
+
+        $request = new Request('GET', 'http://foo.bar/baz');
+
+        $result = $this->invoke($instance, 'authenticate', [$request]);
+
+        $this->assertResultAuthenticatedWithToken($result, $accessToken);
+    }
+
+    /**
+ * should_request_new_access_token_if_expired
+ * @test
+ */
+    public function should_request_new_access_token_if_expired()
+    {
+        $time = time();
+        $oldToken = new AccessToken(['access_token' => '123', 'expires' => $time]);
+        $newToken = new AccessToken(['access_token' => 'abc']);
+
+        $this->provider->expects($this->once())
+            ->method('getAccessToken')
+            ->willReturn($newToken);
+
+        $instance = new Bearer($this->provider, $oldToken);
+        $request = new Request('GET', 'http://foo.bar/baz');
+
+        $result = $this->invoke($instance, 'authenticate', [$request]);
+        $this->assertResultAuthenticatedWithToken($result, $newToken);
+    }
+
+    /**
+     * should_not_request_new_access_token_if_token_still_valid
+     * @test
+     */
+    public function should_not_request_new_access_token_if_token_has_no_expiration()
+    {
+        $validToken = new AccessToken(['access_token' => '123']);
+
+        $this->provider->expects($this->never())
+            ->method('getAccessToken');
+
+        $instance = new Bearer($this->provider, $validToken);
+        $request = new Request('GET', 'http://foo.bar/baz');
+        $result = $this->invoke($instance, 'authenticate', [$request]);
+
+        $this->assertResultAuthenticatedWithToken($result, $validToken);
+    }
+
+    /**
+     * should_not_request_new_access_token_if_token_still_valid
+     * @test
+     */
+    public function should_not_request_new_access_token_if_token_still_valid()
+    {
+        $time = time() + 3600;
+        $validToken = new AccessToken(['access_token' => '123', 'expires' => $time]);
+
+        $this->provider->expects($this->never())
+            ->method('getAccessToken');
+
+        $instance = new Bearer($this->provider, $validToken);
+        $request = new Request('GET', 'http://foo.bar/baz');
+        $result = $this->invoke($instance, 'authenticate', [$request]);
+
+        $this->assertResultAuthenticatedWithToken($result, $validToken);
+    }
+
+    /**
+     * invoke_should_return_function
+     * @test
+     */
+    public function invoke_should_return_function()
+    {
+        $callback = function() {};
+
+        $instance = new Bearer($this->provider);
+        $this->assertTrue(method_exists($instance, '__invoke'));
+
+        $func = $instance->__invoke($callback);
+
+        $this->assertInternalType('callable', $func);
+    }
+
+    /**
+     * End-to-end test
+     *
+     * @test
+     */
+    public function invoke_function_should_authenticate()
+    {
+        $callbackCalled = false;
+        $callback = function(RequestInterface $request, array $options) use (&$callbackCalled) {
+            $callbackCalled = true;
+            $this->assertTrue($request->hasHeader('Authentication'));
+            return new Response(); // ok
+        };
+
+        $validToken = new AccessToken(['access_token' => 'abc']);
+        $this->provider->expects($this->once())
+            ->method('getAccessToken')
+            ->willReturn($validToken);
+
+        $request = new Request('GET', 'http://foo.bar/baz');
+        $options = ['foo' => 'bar'];
+
+        /** @var Bearer|MockObject $instance */
+        $instance = new Bearer($this->provider);
+        $func = $instance->__invoke($callback);
+
+        $func($request, $options);
+
+        $this->assertTrue($callbackCalled);
+    }
+
+    /**
+     * assertResultAuthenticatedWithToken
+     * @param $result
+     * @param $accessToken
+     * @return void
+     */
+    private function assertResultAuthenticatedWithToken(RequestInterface $result, AccessToken $accessToken)
+    {
+        $this->assertTrue($result->hasHeader('Authentication'));
+        $this->assertContains('Bearer ' . $accessToken->getToken(), $result->getHeader('Authentication'));
+    }
+}

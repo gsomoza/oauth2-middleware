@@ -9,5 +9,20 @@
             "email": "gabriel@somoza.me"
         }
     ],
-    "require": {}
+    "autoload": {
+        "psr-4": {
+            "Strategery\\Psr7\\OAuth2Middleware\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "StrategeryTest\\Unit\\Psr7\\OAuth2Middleware\\": "tests"
+        }
+    },
+    "require": {
+        "league/oauth2-client": "1.2.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "*"
+    }
 }
