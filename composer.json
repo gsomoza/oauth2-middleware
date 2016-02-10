@@ -1,0 +1,13 @@
+{
+    "name": "strategery/oauth2-client-middleware",
+    "description": "OAuth2 PSR7 middleware for league/oauth2-client",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Gabriel Somoza",
+            "email": "gabriel@somoza.me"
+        }
+    ],
+    "require": {}
+}
