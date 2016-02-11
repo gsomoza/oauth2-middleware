@@ -1,0 +1,41 @@
+#Trying to go to the faster container infrastructure of github
+sudo: false
+
+language: php
+
+php:
+  - 5.5
+  - 5.6
+  - 7.0
+  - hhvm
+
+matrix:
+  allow_failures:
+    - php: hhvm
+  include:
+    - php: 5.5
+      env: deps=low
+    - php: 5.6
+      env: coverage=yes
+
+env:
+  global:
+    - deps=no
+
+before_install:
+  - composer self-update
+  - composer config --quiet github-oauth.github.com $GITHUB_TOKEN
+  - if [[ ! $GITHUB_TOKEN ]]; then echo "no github token"; fi
+  - if [[ ! $GITHUB_TOKEN ]]; then flag=--prefer-source; fi
+
+install:
+  - if [ "$deps" = "no" ]; then composer $flag install; fi;
+  - if [ "$deps" = "low" ]; then composer $flag --prefer-lowest --prefer-stable update; fi;
+
+script:
+  - mkdir -p build/logs
+  - if [ "$coverage" = "yes" ]; then ./vendor/bin/phpunit --coverage-clover build/logs/coverage.xml; else ./vendor/bin/phpunit; fi;
+
+after_script:
+  - wget https://scrutinizer-ci.com/ocular.phar
+  - php ocular.phar code-coverage:upload --format=php-clover build/logs/coverage.xml
