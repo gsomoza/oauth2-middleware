@@ -46,17 +46,23 @@ final class Bearer
     /** @var AccessToken */
     private $accessToken;
 
+    /** @var callable */
+    private $tokenCallback;
+
     /**
-     * OAuth2Middleware constructor.
-     * @param AccessToken $accessToken
-     * @param AbstractProvider $provider
+     * @param AbstractProvider $provider An OAuth2 Client Provider.
+     * @param AccessToken $accessToken Provide an initial (e.g. cached) access token.
+     * @param callable $tokenCallback Will be called with a new AccessToken as a parameter if the AcessToken ever
+     *                                needs to be renewed.
      */
     public function __construct(
         AbstractProvider $provider,
-        AccessToken $accessToken = null
+        AccessToken $accessToken = null,
+        callable $tokenCallback = null
     ) {
         $this->provider = $provider;
         $this->accessToken = $accessToken;
+        $this->tokenCallback = $tokenCallback;
     }
 
     /**
@@ -105,7 +111,20 @@ final class Bearer
             || ($this->accessToken->getExpires() !== null
                 && $this->accessToken->getExpires() - $now <= 0)
         ) {
-            $this->accessToken = $this->provider->getAccessToken('client_credentials');
+            $this->renewAccessToken();
+        }
+    }
+
+    /**
+     * renewAccessToken
+     * @return void
+     */
+    private function renewAccessToken()
+    {
+        $this->accessToken = $this->provider->getAccessToken('client_credentials');
+
+        if ($this->tokenCallback) {
+            call_user_func($this->tokenCallback, $this->accessToken);
         }
     }
 }

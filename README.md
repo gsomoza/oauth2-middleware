@@ -44,6 +44,37 @@ $stack->push($oauth2);
 // if you want to debug, it might be useful to attach a PSR7 logger here
 ```
 
+## Caching the Access Token
+
+A callback can be assigned to the middleware in order to save the access token for future use. Make sure you know about
+the security implications of storing an access token - do it at your own risk.
+
+Example:
+
+```php
+use Somoza\Psr7\OAuth2Middleware;
+use League\OAuth2\Client\Token\AccessToken;
+
+// see previous example for initialization
+$tokenStore = new EncryptedCache(); // you can use whatever you want here
+$token = null;
+if ($tokenStore->contains($userId)) {
+    $tokenData = json_decode($cache->fetch($userId));
+    $token = new AccessToken($tokenData);
+}
+
+$oauth2 = new OAuth2Middleware\Bearer(
+    $provider, 
+    $token, // null if nothing was stored - an instance of AccessToken otherwise 
+    function(AccessToken $newToken) use ($tokenStore, $userId) {
+        // called whenever a new AccessToken is fetched
+        $tokenStore->save($userId, $newToken->jsonSerialize());
+    }
+);
+
+$stack->push($oauth2);
+```
+
 ## License
 
 MIT - see LICENSE.md

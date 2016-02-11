@@ -247,6 +247,31 @@ class BearerTest extends TestCase
     }
 
     /**
+     * @test
+     */
+    public function should_invoke_token_callback_if_token_renewed()
+    {
+        $accessToken = new AccessToken(['access_token' => '123']);
+        $this->provider->expects($this->once())
+            ->method('getAccessToken')
+            ->willReturn($accessToken);
+        $tokenCallbackCalled = false;
+
+        // the callback that we're testing
+        $tokenCallback = function (AccessToken $token) use (&$tokenCallbackCalled, $accessToken) {
+            $tokenCallbackCalled = true;
+            $this->assertSame($token, $accessToken);
+        };
+
+        $instance = new Bearer($this->provider, null, $tokenCallback);
+        $request = new Request('GET', 'http://foo.bar/baz');
+
+        $result = $this->invoke($instance, 'authenticate', [$request]);
+
+        $this->assertResultAuthenticatedWithToken($result, $accessToken);
+    }
+
+    /**
      * End-to-end test
      *
      * @test
