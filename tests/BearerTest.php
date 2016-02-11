@@ -29,7 +29,6 @@ use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use League\OAuth2\Client\Provider\AbstractProvider;
 use League\OAuth2\Client\Token\AccessToken;
-use PHPUnit_Framework_MockObject_MockObject as MockObject;
 use Psr\Http\Message\RequestInterface;
 use Somoza\Psr7\OAuth2Middleware\Bearer;
 
@@ -39,7 +38,7 @@ use Somoza\Psr7\OAuth2Middleware\Bearer;
  */
 class BearerTest extends TestCase
 {
-    /** @var MockObject|AbstractProvider */
+    /** @var \PHPUnit_Framework_MockObject_MockObject|AbstractProvider */
     private $provider;
 
     /**
@@ -48,7 +47,24 @@ class BearerTest extends TestCase
      */
     public function setUp()
     {
-        $this->provider = $this->getMock(AbstractProvider::class);
+        $this->provider = $this->getMockForAbstractClass(
+            AbstractProvider::class,
+            [],
+            '',
+            true,
+            true,
+            true,
+            ['getAccessToken']
+        );
+    }
+
+    /**
+     * tearDown
+     * @return void
+     */
+    public function tearDown()
+    {
+        $this->provider = null;
     }
 
     /**
@@ -82,7 +98,7 @@ class BearerTest extends TestCase
     {
         $this->provider->expects($this->once())
             ->method('getAccessToken')
-            ->with('client_credentials')
+            //->with('client_credentials')
             ->willReturn('123');
 
         $instance = new Bearer($this->provider);
@@ -253,7 +269,7 @@ class BearerTest extends TestCase
         $request = new Request('GET', 'http://foo.bar/baz');
         $options = ['foo' => 'bar'];
 
-        /** @var Bearer|MockObject $instance */
+        /** @var Bearer|\PHPUnit_Framework_MockObject_MockObject $instance */
         $instance = new Bearer($this->provider);
         $func = $instance->__invoke($callback);
 
