@@ -23,12 +23,12 @@
  * SOFTWARE.
  */
 
-namespace StrategeryTest\Unit\Psr7\OAuth2Middleware;
+namespace SomozaTest\Unit\Psr7\OAuth2Middleware;
 
 /**
  * Class TestCase
  *
- * @author Gabriel Somoza <gabriel.somoza@cu.be>
+ * @author Gabriel Somoza <gabriel@somoza.me>
  */
 class TestCase extends \PHPUnit_Framework_TestCase
 {

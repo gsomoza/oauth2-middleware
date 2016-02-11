@@ -1,5 +1,5 @@
 {
-    "name": "strategery/oauth2-client-middleware",
+    "name": "somoza/oauth2-client-middleware",
     "description": "OAuth2 PSR7 middleware for league/oauth2-client",
     "type": "library",
     "license": "MIT",
@@ -11,12 +11,12 @@
     ],
     "autoload": {
         "psr-4": {
-            "Strategery\\Psr7\\OAuth2Middleware\\": "src"
+            "Somoza\\Psr7\\OAuth2Middleware\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "StrategeryTest\\Unit\\Psr7\\OAuth2Middleware\\": "tests"
+            "SomozaTest\\Unit\\Psr7\\OAuth2Middleware\\": "tests"
         }
     },
     "require": {

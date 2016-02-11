@@ -9,7 +9,7 @@ PSR7 middleware that uses league/oauth2-client to authenticate requests with an 
 ## Installation
 
 ```
-composer require strategery/oauth2-client-middleware
+composer require somoza/oauth2-client-middleware
 ```
 
 ## Usage
@@ -19,7 +19,7 @@ The current implementation is tied to Guzzle 6, because its a direct dependency 
 Using Guzzle:
 
 ```php
-use Strategery\Psr7\OAuth2Middleware;
+use Somoza\Psr7\OAuth2Middleware;
 
 $stack = new \GuzzleHttp\HandlerStack();
 $stack->setHandler(new CurlHandler());

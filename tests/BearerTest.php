@@ -23,7 +23,7 @@
  * SOFTWARE.
  */
 
-namespace StrategeryTest\Unit\Psr7\OAuth2Middleware;
+namespace SomozaTest\Unit\Psr7\OAuth2Middleware;
 
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
@@ -31,11 +31,11 @@ use League\OAuth2\Client\Provider\AbstractProvider;
 use League\OAuth2\Client\Token\AccessToken;
 use PHPUnit_Framework_MockObject_MockObject as MockObject;
 use Psr\Http\Message\RequestInterface;
-use Strategery\Psr7\OAuth2Middleware\Bearer;
+use Somoza\Psr7\OAuth2Middleware\Bearer;
 
 /**
  * Class BearerTest
- * @author Gabriel Somoza <gabriel@strategery.io>
+ * @author Gabriel Somoza <gabriel@somoza.me>
  */
 class BearerTest extends TestCase
 {

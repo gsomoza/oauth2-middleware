@@ -23,7 +23,7 @@
  * SOFTWARE.
  */
 
-namespace Strategery\Psr7\OAuth2Middleware;
+namespace Somoza\Psr7\OAuth2Middleware;
 
 use League\OAuth2\Client\Provider\AbstractProvider;
 use League\OAuth2\Client\Token\AccessToken;
@@ -32,7 +32,7 @@ use Psr\Http\Message\RequestInterface;
 /**
  * Bearer PSR7 Middleware
  *
- * @author Gabriel Somoza <gabriel@strategery.io>
+ * @author Gabriel Somoza <gabriel@somoza.me>
  */
 final class Bearer
 {
