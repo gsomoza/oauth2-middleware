@@ -51,9 +51,9 @@ final class Bearer
 
     /**
      * @param AbstractProvider $provider An OAuth2 Client Provider.
-     * @param AccessToken $accessToken Provide an initial (e.g. cached) access token.
-     * @param callable $tokenCallback Will be called with a new AccessToken as a parameter if the AcessToken ever
-     *                                needs to be renewed.
+     * @param null|AccessToken $accessToken Provide an initial (e.g. cached) access token.
+     * @param null|callable $tokenCallback Will be called with a new AccessToken as a parameter if the AcessToken ever
+     *                                     needs to be renewed.
      */
     public function __construct(
         AbstractProvider $provider,
