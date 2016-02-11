@@ -5,7 +5,7 @@ language: php
 
 php:
   - 5.5
-  - 5.6
+#  - 5.6 # already being tested with coverage
   - 7.0
   - hhvm
 
