@@ -38,4 +38,4 @@ script:
 
 after_script:
   - wget https://scrutinizer-ci.com/ocular.phar
-  - php ocular.phar code-coverage:upload --format=php-clover build/logs/coverage.xml
+  - if [ "$coverage" = "yes" ]; then php ocular.phar code-coverage:upload --format=php-clover build/logs/coverage.xml; fi;
