@@ -23,6 +23,6 @@
         "league/oauth2-client": "1.2.0"
     },
     "require-dev": {
-        "phpunit/phpunit": "*"
+        "phpunit/phpunit": ">=4.0"
     }
 }
