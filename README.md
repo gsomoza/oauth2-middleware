@@ -1,6 +1,6 @@
 ## OAuth2 client middleware for league/oauth2-client
 
-[![Build Status](https://scrutinizer-ci.com/g/gabrielsomoza/oauth2-middleware/badges/build.png?b=master)](https://scrutinizer-ci.com/g/gabrielsomoza/oauth2-middleware/build-status/master)
+[![Build Status](https://travis-ci.org/gabrielsomoza/oauth2-middleware.svg?branch=master)](https://travis-ci.org/gabrielsomoza/oauth2-middleware)
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/gabrielsomoza/oauth2-middleware/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/gabrielsomoza/oauth2-middleware/?branch=master)
 [![Code Coverage](https://scrutinizer-ci.com/g/gabrielsomoza/oauth2-middleware/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/gabrielsomoza/oauth2-middleware/?branch=master)
 
