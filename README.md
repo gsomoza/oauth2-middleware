@@ -47,7 +47,7 @@ $stack->push($oauth2);
 ## Caching the Access Token
 
 A callback can be assigned to the middleware in order to save the access token for future use. Make sure you know about
-the security implications of storing an access token - do it at your own risk.
+the security implications of storing an access token (do it at your own risk).
 
 Example:
 
