@@ -4,7 +4,9 @@
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/gabrielsomoza/oauth2-middleware/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/gabrielsomoza/oauth2-middleware/?branch=master)
 [![Code Coverage](https://scrutinizer-ci.com/g/gabrielsomoza/oauth2-middleware/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/gabrielsomoza/oauth2-middleware/?branch=master)
 
-PSR7 middleware that uses league/oauth2-client to authenticate requests with an OAuth2 server
+PSR7 middleware that uses league/oauth2-client to authenticate requests with an OAuth2 server.
+
+NOTE: the current version of this middleware only supports the "client_credentials" grant type.
 
 ## Installation
 
