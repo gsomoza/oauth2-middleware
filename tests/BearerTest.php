@@ -109,17 +109,17 @@ class BearerTest extends TestCase
     }
 
     /**
-     * should_skip_requests_with_authentication_header
+     * should_skip_requests_with_authorization_header
      * @return void
      *
      * @test
      */
-    public function should_skip_requests_with_authentication_header()
+    public function should_skip_requests_with_authorization_header()
     {
-        $request = new Request('GET', 'http://foo.bar/oauth', ['Authentication' => null]);
+        $request = new Request('GET', 'http://foo.bar/oauth', [Bearer::HEADER_AUTHORIZATION => null]);
         $instance = new Bearer($this->provider);
 
-        $result = $this->invoke($instance, 'authenticate', [$request]);
+        $result = $this->invoke($instance, 'authorizeRequest', [$request]);
         $this->assertSame($request, $result);
     }
 
@@ -132,15 +132,15 @@ class BearerTest extends TestCase
         $request = new Request('POST', 'http://foo.bar/oauth');
         $instance = new Bearer($this->provider);
 
-        $result = $this->invoke($instance, 'authenticate', [$request]);
+        $result = $this->invoke($instance, 'authorizeRequest', [$request]);
         $this->assertSame($request, $result);
     }
 
     /**
-     * should_skip_requests_to_authentication_uri
+     * should_skip_requests_to_authorization_uri
      * @test
      */
-    public function should_skip_requests_to_authentication_uri()
+    public function should_skip_requests_to_authorization_uri()
     {
         $this->provider->expects($this->once())
             ->method('getBaseAuthorizationUrl')
@@ -148,7 +148,7 @@ class BearerTest extends TestCase
         $instance = new Bearer($this->provider);
         $request = new Request('GET', 'http://foo.bar/oauth');
 
-        $result = $this->invoke($instance, 'authenticate', [$request]);
+        $result = $this->invoke($instance, 'authorizeRequest', [$request]);
         $this->assertSame($request, $result);
     }
 
@@ -167,9 +167,9 @@ class BearerTest extends TestCase
 
         $request = new Request('GET', 'http://foo.bar/baz');
 
-        $result = $this->invoke($instance, 'authenticate', [$request]);
+        $result = $this->invoke($instance, 'authorizeRequest', [$request]);
 
-        $this->assertResultAuthenticatedWithToken($result, $accessToken);
+        $this->assertResultAuthorizedWithToken($result, $accessToken);
     }
 
     /**
@@ -189,8 +189,8 @@ class BearerTest extends TestCase
         $instance = new Bearer($this->provider, $oldToken);
         $request = new Request('GET', 'http://foo.bar/baz');
 
-        $result = $this->invoke($instance, 'authenticate', [$request]);
-        $this->assertResultAuthenticatedWithToken($result, $newToken);
+        $result = $this->invoke($instance, 'authorizeRequest', [$request]);
+        $this->assertResultAuthorizedWithToken($result, $newToken);
     }
 
     /**
@@ -206,9 +206,9 @@ class BearerTest extends TestCase
 
         $instance = new Bearer($this->provider, $validToken);
         $request = new Request('GET', 'http://foo.bar/baz');
-        $result = $this->invoke($instance, 'authenticate', [$request]);
+        $result = $this->invoke($instance, 'authorizeRequest', [$request]);
 
-        $this->assertResultAuthenticatedWithToken($result, $validToken);
+        $this->assertResultAuthorizedWithToken($result, $validToken);
     }
 
     /**
@@ -225,9 +225,9 @@ class BearerTest extends TestCase
 
         $instance = new Bearer($this->provider, $validToken);
         $request = new Request('GET', 'http://foo.bar/baz');
-        $result = $this->invoke($instance, 'authenticate', [$request]);
+        $result = $this->invoke($instance, 'authorizeRequest', [$request]);
 
-        $this->assertResultAuthenticatedWithToken($result, $validToken);
+        $this->assertResultAuthorizedWithToken($result, $validToken);
     }
 
     /**
@@ -266,9 +266,9 @@ class BearerTest extends TestCase
         $instance = new Bearer($this->provider, null, $tokenCallback);
         $request = new Request('GET', 'http://foo.bar/baz');
 
-        $result = $this->invoke($instance, 'authenticate', [$request]);
+        $result = $this->invoke($instance, 'authorizeRequest', [$request]);
 
-        $this->assertResultAuthenticatedWithToken($result, $accessToken);
+        $this->assertResultAuthorizedWithToken($result, $accessToken);
     }
 
     /**
@@ -282,7 +282,7 @@ class BearerTest extends TestCase
         $callback = function(RequestInterface $request, array $options) use (&$callbackCalled) {
             $callbackCalled = true;
             $this->assertEquals(['foo' => 'bar'], $options);
-            $this->assertTrue($request->hasHeader('Authentication'));
+            $this->assertTrue($request->hasHeader(Bearer::HEADER_AUTHORIZATION));
             return new Response(); // ok
         };
 
@@ -304,14 +304,14 @@ class BearerTest extends TestCase
     }
 
     /**
-     * assertResultAuthenticatedWithToken
+     * assertResultAuthorizedWithToken
      * @param $result
      * @param $accessToken
      * @return void
      */
-    private function assertResultAuthenticatedWithToken(RequestInterface $result, AccessToken $accessToken)
+    private function assertResultAuthorizedWithToken(RequestInterface $result, AccessToken $accessToken)
     {
-        $this->assertTrue($result->hasHeader('Authentication'));
-        $this->assertContains('Bearer ' . $accessToken->getToken(), $result->getHeader('Authentication'));
+        $this->assertTrue($result->hasHeader(Bearer::HEADER_AUTHORIZATION));
+        $this->assertContains(Bearer::AUTHENTICATION_SCHEME . ' ' . $accessToken->getToken(), $result->getHeader(Bearer::HEADER_AUTHORIZATION));
     }
 }

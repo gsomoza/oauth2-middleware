@@ -33,12 +33,23 @@ use Psr\Http\Message\RequestInterface;
  * Bearer PSR7 Middleware
  *
  * @author Gabriel Somoza <gabriel@somoza.me>
+ *
+ * @see https://tools.ietf.org/html/rfc6750
  */
 final class Bearer
 {
-    const HEADER_AUTHENTICATION = 'Authentication';
+    /**
+     * @string Name of the authorization header injected into the request
+     */
+    const HEADER_AUTHORIZATION = 'Authorization';
 
-    const AUTHENTICATION_SCHEMA = 'Bearer';
+    /**
+     * @string Authorization scheme used to transmit the access token
+     */
+    const AUTHENTICATION_SCHEME = 'Bearer';
+
+    /** @deprecated use HEADER_AUTHORIZATION */
+    const HEADER_AUTHENTICATION = self::HEADER_AUTHORIZATION;
 
     /** @var AbstractProvider */
     private $provider;
@@ -73,20 +84,20 @@ final class Bearer
     public function __invoke(callable $handler)
     {
         return function (RequestInterface $request, array $options) use ($handler) {
-            $request = $this->authenticate($request);
+            $request = $this->authorizeRequest($request);
             return $handler($request, $options);
         };
     }
 
     /**
-     * Authenticate
+     * Authorize a request
      * @param RequestInterface $request
      * @return RequestInterface
      */
-    protected function authenticate(RequestInterface $request)
+    protected function authorizeRequest(RequestInterface $request)
     {
         if ($request->getMethod() !== 'GET'
-            || $request->hasHeader('Authentication')
+            || $request->hasHeader(self::HEADER_AUTHORIZATION)
             || $request->getUri() == $this->provider->getBaseAuthorizationUrl()
         ) {
             return $request;
@@ -95,8 +106,8 @@ final class Bearer
         $this->checkAccessToken();
 
         return $request->withHeader(
-            self::HEADER_AUTHENTICATION,
-            self::AUTHENTICATION_SCHEMA . ' ' . $this->accessToken->getToken()
+            self::HEADER_AUTHORIZATION,
+            self::AUTHENTICATION_SCHEME . ' ' . $this->accessToken->getToken()
         );
     }
 
