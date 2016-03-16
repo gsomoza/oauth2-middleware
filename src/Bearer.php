@@ -96,8 +96,7 @@ final class Bearer
      */
     protected function authorizeRequest(RequestInterface $request)
     {
-        if ($request->getMethod() !== 'GET'
-            || $request->hasHeader(self::HEADER_AUTHORIZATION)
+        if ($request->hasHeader(self::HEADER_AUTHORIZATION)
             || $request->getUri() == $this->provider->getBaseAuthorizationUrl()
         ) {
             return $request;

@@ -124,16 +124,36 @@ class BearerTest extends TestCase
     }
 
     /**
-     * should_skip_non_GET_requests
+     * should_allow_all_http_request_methods
      * @test
+     * @dataProvider httpMethodsProvider
+     * @param $method
      */
-    public function should_skip_non_GET_requests()
+    public function should_allow_all_http_request_methods($method)
     {
-        $request = new Request('POST', 'http://foo.bar/oauth');
+        $request = new Request($method, 'http://foo.bar/oauth');
         $instance = new Bearer($this->provider);
 
+        $accessToken = new AccessToken(['access_token' => '123']);
+        $this->provider->expects($this->once())
+            ->method('getAccessToken')
+            ->willReturn($accessToken);
+
         $result = $this->invoke($instance, 'authorizeRequest', [$request]);
-        $this->assertSame($request, $result);
+
+        $this->assertResultAuthorizedWithToken($result, $accessToken);
+    }
+
+    /**
+     * httpMethodsProvider
+     * @return array
+     * @see https://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html
+     */
+    public function httpMethodsProvider()
+    {
+        return [
+            ['GET'], ['POST'], ['PATCH'], ['PUT'], ['OPTIONS'], ['DELETE'], ['HEAD'], ['CONNECT'], ['TRACE']
+        ];
     }
 
     /**
