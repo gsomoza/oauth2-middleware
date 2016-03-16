@@ -131,10 +131,19 @@ final class Bearer
      */
     private function renewAccessToken()
     {
-        $this->accessToken = $this->provider->getAccessToken('client_credentials');
+        $oldAccessToken = $this->accessToken;
+        $refreshToken = $this->accessToken ? $this->accessToken->getRefreshToken() : null;
+
+        if ($refreshToken) {
+            $this->accessToken = $this->provider->getAccessToken('refresh_token', [
+                'refresh_token' => $refreshToken,
+            ]);
+        } else {
+            $this->accessToken = $this->provider->getAccessToken('client_credentials');
+        }
 
         if ($this->tokenCallback) {
-            call_user_func($this->tokenCallback, $this->accessToken);
+            call_user_func($this->tokenCallback, $this->accessToken, $oldAccessToken);
         }
     }
 }
