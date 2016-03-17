@@ -98,7 +98,7 @@ class BearerTest extends TestCase
     {
         $this->provider->expects($this->once())
             ->method('getAccessToken')
-            //->with('client_credentials')
+            ->with('client_credentials')
             ->willReturn('123');
 
         $instance = new Bearer($this->provider);
@@ -193,9 +193,9 @@ class BearerTest extends TestCase
     }
 
     /**
- * should_request_new_access_token_if_expired
- * @test
- */
+     * should_request_new_access_token_if_expired
+     * @test
+     */
     public function should_request_new_access_token_if_expired()
     {
         $time = time();
@@ -204,6 +204,29 @@ class BearerTest extends TestCase
 
         $this->provider->expects($this->once())
             ->method('getAccessToken')
+            ->with('client_credentials')
+            ->willReturn($newToken);
+
+        $instance = new Bearer($this->provider, $oldToken);
+        $request = new Request('GET', 'http://foo.bar/baz');
+
+        $result = $this->invoke($instance, 'authorizeRequest', [$request]);
+        $this->assertResultAuthorizedWithToken($result, $newToken);
+    }
+
+    /**
+     * should_request_new_access_token_if_expired
+     * @test
+     */
+    public function should_refresh_access_token_if_expired()
+    {
+        $time = time();
+        $oldToken = new AccessToken(['access_token' => '123', 'refresh_token' => '567', 'expires' => $time]);
+        $newToken = new AccessToken(['access_token' => 'abc']);
+
+        $this->provider->expects($this->once())
+            ->method('getAccessToken')
+            ->with('refresh_token', ['refresh_token' => '567'])
             ->willReturn($newToken);
 
         $instance = new Bearer($this->provider, $oldToken);
@@ -278,12 +301,41 @@ class BearerTest extends TestCase
         $tokenCallbackCalled = false;
 
         // the callback that we're testing
-        $tokenCallback = function (AccessToken $token) use (&$tokenCallbackCalled, $accessToken) {
+        $tokenCallback = function (AccessToken $token, AccessToken $oldToken = null) use (&$tokenCallbackCalled, $accessToken) {
             $tokenCallbackCalled = true;
             $this->assertSame($token, $accessToken);
+            $this->assertSame(null, $oldToken);
         };
 
         $instance = new Bearer($this->provider, null, $tokenCallback);
+        $request = new Request('GET', 'http://foo.bar/baz');
+
+        $result = $this->invoke($instance, 'authorizeRequest', [$request]);
+
+        $this->assertResultAuthorizedWithToken($result, $accessToken);
+    }
+
+    /**
+     * @test
+     */
+    public function should_invoke_token_callback_including_old_token_if_token_renewed()
+    {
+        $oldAccessToken = new AccessToken(['access_token' => 'oldie', 'expires' => time()]);
+        $accessToken = new AccessToken(['access_token' => '123']);
+
+        $this->provider->expects($this->once())
+            ->method('getAccessToken')
+            ->willReturn($accessToken);
+        $tokenCallbackCalled = false;
+
+        // the callback that we're testing
+        $tokenCallback = function (AccessToken $token, AccessToken $oldToken) use (&$tokenCallbackCalled, $accessToken, $oldAccessToken) {
+            $tokenCallbackCalled = true;
+            $this->assertSame($token, $accessToken);
+            $this->assertSame($oldAccessToken, $oldToken);
+        };
+
+        $instance = new Bearer($this->provider, $oldAccessToken, $tokenCallback);
         $request = new Request('GET', 'http://foo.bar/baz');
 
         $result = $this->invoke($instance, 'authorizeRequest', [$request]);
@@ -296,7 +348,7 @@ class BearerTest extends TestCase
      *
      * @test
      */
-    public function invoke_function_should_authenticate()
+    public function invoke_function_should_authorize()
     {
         $callbackCalled = false;
         $callback = function(RequestInterface $request, array $options) use (&$callbackCalled) {
