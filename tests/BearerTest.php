@@ -376,6 +376,132 @@ class BearerTest extends TestCase
     }
 
     /**
+     * @test
+     * Test that authorization url and base access token url are whitelisted by default
+     */
+    public function should_whitelist_base_urls()
+    {
+        $this->provider->expects($this->once())
+            ->method('getBaseAuthorizationUrl')
+            ->willReturn('oauth2/authorize');
+
+        $this->provider->expects($this->once())
+            ->method('getBaseAccessTokenUrl')
+            ->willReturn('oauth2/token');
+
+        $instance = new Bearer($this->provider);
+
+        $this->assertSame(
+            [
+                'oauth2/authorize',
+                'oauth2/token'
+            ],
+            $instance->getWhitelist()
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function should_add_to_whitelist()
+    {
+        $this->provider->expects($this->once())
+            ->method('getBaseAuthorizationUrl')
+            ->willReturn('url1');
+
+        $this->provider->expects($this->once())
+            ->method('getBaseAccessTokenUrl')
+            ->willReturn('url2');
+
+        $instance = new Bearer($this->provider);
+
+        $instance->addToWhitelist('url3');
+        $instance->addToWhitelist('url4');
+        $instance->addToWhitelist('url2'); //should ignore duplicate
+
+        $this->assertSame(['url1', 'url2', 'url3', 'url4'], $instance->getWhitelist());
+    }
+
+
+    /**
+     * @test
+     */
+    public function should_check_whitelist()
+    {
+        $instance = $this->getMockForAbstractClass(
+            Bearer::class,
+            [$this->provider],
+            '',
+            true,
+            true,
+            true,
+            ['getWhitelist']
+        );
+
+        $instance->expects($this->exactly(8))
+            ->method('getWhitelist')
+            ->willReturn([
+                'url1',
+                'url2',
+                'url3',
+                'url4',
+            ]);
+
+        //in white list
+        $this->assertTrue($this->invoke($instance, 'isWhitelisted', ['url1']));
+        $this->assertTrue($this->invoke($instance, 'isWhitelisted', ['url2']));
+        $this->assertTrue($this->invoke($instance, 'isWhitelisted', ['url3']));
+        $this->assertTrue($this->invoke($instance, 'isWhitelisted', ['url4']));
+
+        //not in white list
+        $this->assertFalse($this->invoke($instance, 'isWhitelisted', ['url5']));
+        $this->assertFalse($this->invoke($instance, 'isWhitelisted', ['']));
+        $this->assertFalse($this->invoke($instance, 'isWhitelisted', [null]));
+        $this->assertFalse($this->invoke($instance, 'isWhitelisted', ['http://missing.com']));
+    }
+
+
+    /**
+     * @test
+     */
+    public function should_not_authorize_whitelisted_urls()
+    {
+        $validToken = new AccessToken(['access_token' => '123']);
+
+        $instance = $this->getMockForAbstractClass(
+            Bearer::class,
+            [$this->provider, $validToken],
+            '',
+            true,
+            true,
+            true,
+            ['getWhitelist']
+        );
+
+        $instance->expects($this->exactly(3))
+            ->method('getWhitelist')
+            ->willReturn([
+                'https://whitelisted.com',
+                'https://another.white.list.com'
+            ]);
+
+        //Assert request is not changed for whitelisted url
+        $request = new Request('GET', 'https://whitelisted.com');
+        $result = $this->invoke($instance, 'authorizeRequest', [$request]);
+        $this->assertSame($request, $result);
+
+        //Assert request is not changed for whitelisted url
+        $request = new Request('GET', 'https://another.white.list.com');
+        $result = $this->invoke($instance, 'authorizeRequest', [$request]);
+        $this->assertSame($request, $result);
+
+        //Assert request is changed for whitelisted url
+        $request = new Request('GET', 'https://authorizeme.com');
+        $result = $this->invoke($instance, 'authorizeRequest', [$request]);
+        $this->assertResultAuthorizedWithToken($result, $validToken);
+    }
+
+    /**
      * assertResultAuthorizedWithToken
      * @param $result
      * @param $accessToken
