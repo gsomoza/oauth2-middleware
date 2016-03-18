@@ -31,6 +31,8 @@ use League\OAuth2\Client\Provider\AbstractProvider;
 use League\OAuth2\Client\Token\AccessToken;
 use Psr\Http\Message\RequestInterface;
 use Somoza\Psr7\OAuth2Middleware\Bearer;
+use Somoza\Psr7\OAuth2Middleware\Util\StringWhitelist;
+use Somoza\Psr7\OAuth2Middleware\Util\Whitelist;
 
 /**
  * Class BearerTest
@@ -377,9 +379,9 @@ class BearerTest extends TestCase
 
     /**
      * @test
-     * Test that authorization url and base access token url are whitelisted by default
+     * Test that authorization url and base access token url are white-listed by default
      */
-    public function should_whitelist_base_urls()
+    public function should_whitelist_base_urls_by_default()
     {
         $this->provider->expects($this->once())
             ->method('getBaseAuthorizationUrl')
@@ -391,73 +393,37 @@ class BearerTest extends TestCase
 
         $instance = new Bearer($this->provider);
 
-        $this->assertSame(
-            [
-                'oauth2/authorize',
-                'oauth2/token'
-            ],
-            $instance->getWhitelist()
-        );
+        /** @var Whitelist $whitelist */
+        $whitelist = $this->getPropVal($instance, 'whitelist');
+
+        $this->assertTrue($whitelist->allowed('oauth2/authorize'));
+        $this->assertTrue($whitelist->allowed('oauth2/token'));
     }
-
-    /**
-     * @test
-     */
-    public function should_add_to_whitelist()
-    {
-        $this->provider->expects($this->once())
-            ->method('getBaseAuthorizationUrl')
-            ->willReturn('url1');
-
-        $this->provider->expects($this->once())
-            ->method('getBaseAccessTokenUrl')
-            ->willReturn('url2');
-
-        $instance = new Bearer($this->provider);
-
-        $instance->addToWhitelist('url3');
-        $instance->addToWhitelist('url4');
-        $instance->addToWhitelist('url2'); //should ignore duplicate
-
-        $this->assertSame(['url1', 'url2', 'url3', 'url4'], $instance->getWhitelist());
-    }
-
 
     /**
      * @test
      */
     public function should_check_whitelist()
     {
-        $instance = $this->getMockForAbstractClass(
-            Bearer::class,
-            [$this->provider],
-            '',
-            true,
-            true,
-            true,
-            ['getWhitelist']
-        );
-
-        $instance->expects($this->exactly(8))
-            ->method('getWhitelist')
-            ->willReturn([
-                'url1',
-                'url2',
-                'url3',
-                'url4',
-            ]);
+        $whitelist = new StringWhitelist([
+            'url1',
+            'url2',
+            'url3',
+            'url4',
+        ]);
+        $instance = new Bearer($this->provider, null, null, $whitelist);
 
         //in white list
-        $this->assertTrue($this->invoke($instance, 'isWhitelisted', ['url1']));
-        $this->assertTrue($this->invoke($instance, 'isWhitelisted', ['url2']));
-        $this->assertTrue($this->invoke($instance, 'isWhitelisted', ['url3']));
-        $this->assertTrue($this->invoke($instance, 'isWhitelisted', ['url4']));
+        $this->assertTrue($this->invoke($instance, 'shouldSkipAuthorizationForUrl', ['url1']));
+        $this->assertTrue($this->invoke($instance, 'shouldSkipAuthorizationForUrl', ['url2']));
+        $this->assertTrue($this->invoke($instance, 'shouldSkipAuthorizationForUrl', ['url3']));
+        $this->assertTrue($this->invoke($instance, 'shouldSkipAuthorizationForUrl', ['url4']));
 
         //not in white list
-        $this->assertFalse($this->invoke($instance, 'isWhitelisted', ['url5']));
-        $this->assertFalse($this->invoke($instance, 'isWhitelisted', ['']));
-        $this->assertFalse($this->invoke($instance, 'isWhitelisted', [null]));
-        $this->assertFalse($this->invoke($instance, 'isWhitelisted', ['http://missing.com']));
+        $this->assertFalse($this->invoke($instance, 'shouldSkipAuthorizationForUrl', ['url5']));
+        $this->assertFalse($this->invoke($instance, 'shouldSkipAuthorizationForUrl', ['']));
+        $this->assertFalse($this->invoke($instance, 'shouldSkipAuthorizationForUrl', [null]));
+        $this->assertFalse($this->invoke($instance, 'shouldSkipAuthorizationForUrl', ['http://missing.com']));
     }
 
 
@@ -468,22 +434,12 @@ class BearerTest extends TestCase
     {
         $validToken = new AccessToken(['access_token' => '123']);
 
-        $instance = $this->getMockForAbstractClass(
-            Bearer::class,
-            [$this->provider, $validToken],
-            '',
-            true,
-            true,
-            true,
-            ['getWhitelist']
-        );
+        $whitelist = new StringWhitelist([
+            'https://whitelisted.com',
+            'https://another.white.list.com'
+        ]);
 
-        $instance->expects($this->exactly(3))
-            ->method('getWhitelist')
-            ->willReturn([
-                'https://whitelisted.com',
-                'https://another.white.list.com'
-            ]);
+        $instance = new Bearer($this->provider, $validToken, null, $whitelist);
 
         //Assert request is not changed for whitelisted url
         $request = new Request('GET', 'https://whitelisted.com');
