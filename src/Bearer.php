@@ -36,7 +36,7 @@ use Psr\Http\Message\RequestInterface;
  *
  * @see https://tools.ietf.org/html/rfc6750
  */
-final class Bearer
+class Bearer
 {
     /**
      * @string Name of the authorization header injected into the request
@@ -61,6 +61,11 @@ final class Bearer
     private $tokenCallback;
 
     /**
+     * @var string[]
+     */
+    private $whitelist;
+
+    /**
      * @param AbstractProvider $provider An OAuth2 Client Provider.
      * @param null|AccessToken $accessToken Provide an initial (e.g. cached) access token.
      * @param null|callable $tokenCallback Will be called with a new AccessToken as a parameter if the AcessToken ever
@@ -74,6 +79,11 @@ final class Bearer
         $this->provider = $provider;
         $this->accessToken = $accessToken;
         $this->tokenCallback = $tokenCallback;
+
+        $this->whitelist = [
+            $this->provider->getBaseAuthorizationUrl(),
+            $this->provider->getBaseAccessTokenUrl([]),
+        ];
     }
 
     /**
@@ -85,8 +95,36 @@ final class Bearer
     {
         return function (RequestInterface $request, array $options) use ($handler) {
             $request = $this->authorizeRequest($request);
+
             return $handler($request, $options);
         };
+    }
+
+    /**
+     * @param string $url
+     */
+    public function addToWhitelist($url)
+    {
+        if (!$this->isWhitelisted($url)) {
+            $this->whitelist[] = $url;
+        }
+    }
+
+    /**
+     * @param string $url
+     * @return bool
+     */
+    protected function isWhitelisted($url)
+    {
+        return in_array($url, $this->getWhitelist());
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getWhitelist()
+    {
+        return $this->whitelist;
     }
 
     /**
@@ -96,18 +134,18 @@ final class Bearer
      */
     protected function authorizeRequest(RequestInterface $request)
     {
-        if ($request->hasHeader(self::HEADER_AUTHORIZATION)
-            || $request->getUri() == $this->provider->getBaseAuthorizationUrl()
-        ) {
+        $uri = (string)$request->getUri();
+
+        if ($request->hasHeader(self::HEADER_AUTHORIZATION) || $this->isWhitelisted($uri)) {
             return $request;
+        } else {
+            $this->checkAccessToken();
+
+            return $request->withHeader(
+                self::HEADER_AUTHORIZATION,
+                self::AUTHENTICATION_SCHEME . ' ' . $this->accessToken->getToken()
+            );
         }
-
-        $this->checkAccessToken();
-
-        return $request->withHeader(
-            self::HEADER_AUTHORIZATION,
-            self::AUTHENTICATION_SCHEME . ' ' . $this->accessToken->getToken()
-        );
     }
 
     /**
