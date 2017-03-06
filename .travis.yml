@@ -1,21 +1,13 @@
-#Trying to go to the faster container infrastructure of github
 sudo: false
 
 language: php
 
-php:
-  - 5.5
-#  - 5.6 # already being tested with coverage
-  - 7.0
-  - hhvm
-
 matrix:
-  allow_failures:
-    - php: hhvm
   include:
-    - php: 5.5
+    - php: 7.0
+    - php: 7.0
       env: deps=low
-    - php: 5.6
+    - php: 7.1
       env: coverage=yes
 
 env:

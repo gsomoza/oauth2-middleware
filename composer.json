@@ -11,19 +11,21 @@
     ],
     "autoload": {
         "psr-4": {
-            "Somoza\\Psr7\\OAuth2Middleware\\": "src"
+            "Somoza\\OAuth2Middleware\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "SomozaTest\\Unit\\Psr7\\OAuth2Middleware\\": "tests"
+            "SomozaTest\\OAuth2Middleware\\": "tests"
         }
     },
     "require": {
-        "php": ">=5.5.0",
-        "league/oauth2-client": "^1.2.0|^2.0.0"
+        "php": ">=7.0.0",
+        "league/oauth2-client": "^1.2.0|^2.2.0",
+        "beberlei/assert": "^2.7"
     },
     "require-dev": {
-        "phpunit/phpunit": "^4.0|^5.0"
+        "phpunit/phpunit": "^4.0|^5.0",
+        "mockery/mockery": "^0.9.9"
     }
 }
