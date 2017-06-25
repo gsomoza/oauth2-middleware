@@ -1,12 +1,12 @@
 ## OAuth2 client middleware for league/oauth2-client
 
 [![Build Status](https://travis-ci.org/gsomoza/oauth2-middleware.svg?branch=master)](https://travis-ci.org/gsomoza/oauth2-middleware)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/gabrielsomoza/oauth2-middleware/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/gabrielsomoza/oauth2-middleware/?branch=master)
-[![Code Coverage](https://scrutinizer-ci.com/g/gabrielsomoza/oauth2-middleware/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/gabrielsomoza/oauth2-middleware/?branch=master)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/gsomoza/oauth2-middleware/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/gsomoza/oauth2-middleware/?branch=master)
+[![Code Coverage](https://scrutinizer-ci.com/g/gsomoza/oauth2-middleware/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/gsomoza/oauth2-middleware/?branch=master)
 [![Latest Stable Version](https://poser.pugx.org/somoza/oauth2-client-middleware/v/stable)](https://packagist.org/packages/somoza/oauth2-client-middleware)
 
-[![License](https://poser.pugx.org/somoza/oauth2-client-middleware/license)](https://packagist.org/packages/somoza/oauth2-client-middleware)
 [![Author](https://img.shields.io/badge/author-%40gabriel__somoza-blue.svg)](https://img.shields.io/badge/author-%40gabriel__somoza-blue.svg)
+[![License](https://poser.pugx.org/somoza/oauth2-client-middleware/license)](https://packagist.org/packages/somoza/oauth2-client-middleware)
 
 PSR7 middleware that uses league/oauth2-client to authenticate requests with an OAuth2 server.
 
