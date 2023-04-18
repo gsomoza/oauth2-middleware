@@ -1,3 +1,8 @@
+# Abandoned
+```
+This is to inform all users that this package has been abandoned and will no longer receive any updates or maintenance. We highly recommend users to migrate to an alternative library package. We apologize for any inconvenience caused.
+```
+
 ## OAuth2 client middleware for league/oauth2-client
 
 [![Build Status](https://travis-ci.org/gsomoza/oauth2-middleware.svg?branch=master)](https://travis-ci.org/gsomoza/oauth2-middleware)
